@@ -1,11 +1,14 @@
-package HALtests;
+package HAL;
 
 import reversi.Coordinates;
 import reversi.GameBoard;
 import reversi.OutOfBoundsException;
 
 public class Eval {
-
+  
+  protected int evaluate(int player){
+    return 0;
+  }
 
 	/**
 	 * 
@@ -13,9 +16,10 @@ public class Eval {
 	 * @param the current move (that we plan on making)
 	 * @return how good the move is (+inf == very good, -inf == shit)
 	 */
-	protected static int getWeight(GameBoard gb, Coordinates last, int depth, int mobility) {
-		if(last == null) return 0;
-		int totalstones = (gb.countStones(HAL.player)+gb.countStones(HAL.opponent));
+	protected int getWeight(BitBoard board, int lastCoordinate, int depth, int mobility) {
+
+		Coordinates last = board.ArraytoCoordinate(lastCoordinate);
+		int totalstones = (board.countStones(HAL.player)+board.countStones(HAL.opponent));
 		double diff = 0.5;//totalstones/64;
 		int col = last.getCol(), row = last.getRow();
 		int weight = mobility/2;
@@ -28,12 +32,8 @@ public class Eval {
 		if(totalstones > 55)
 			diff = 3*diff;
 		
-		
-
 		//number of tiles
-		weight += (gb.countStones(HAL.player)-gb.countStones(HAL.opponent))*diff;
-		
-		
+		weight += (board.countStones(HAL.player)-board.countStones(HAL.opponent))*diff;
 		
 		/*weight of fields:
 		 100  -8  8  6  6  8  -8 100
@@ -135,10 +135,11 @@ public class Eval {
 	 * @param int player (see GameBoard.player)
 	 * @return true if the move should be skipped
 	 */
-	protected static boolean checkPrune(GameBoard gb, Coordinates move, int totalstones, int player){
+	protected boolean checkPrune(BitBoard board, int moveCoordinates, int totalstones, int player){
 		int opponent = GameBoard.GREEN;
 		if(player == GameBoard.GREEN)
 			opponent = GameBoard.RED;
+		Coordinates move = board.ArraytoCoordinate(moveCoordinates);
 		int row = move.getRow();
 		int col = move.getCol();
 		
@@ -146,205 +147,149 @@ public class Eval {
 		if((row == 2 || row == 7) && (col == 2 || col == 7)){
 			
 			//if the total disc count is 35 or more, never prune
-				if(totalstones >= 35) 
-					return false;
-				
-				if(row == 2){
-					if(col == 2){
-						try {
-							//Otherwise, if the adjacent corner is occupied, do not prune
-							if(gb.getOccupation(new Coordinates(1,1))== 0)
-								return true;
-							//Otherwise, if both adjacent C-Square are occupied, always prune
-							if(gb.getOccupation(new Coordinates(1,2)) != 0 && gb.getOccupation(new Coordinates(2,1)) != 0 )
-								return true;
-							//Otherwise, prune if and only if the total disc count is less than 25
-							if(totalstones < 25)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}else{
-						try {
-							//Otherwise, if the adjacent corner is occupied, do not prune
-							if(gb.getOccupation(new Coordinates(1,8)) == 0)
-								return true;
-							//Otherwise, if both adjacent C-Square are occupied, always prune
-							if(gb.getOccupation(new Coordinates(1,7)) != 0 && gb.getOccupation(new Coordinates(2,8)) != 0 )
-								return true;
-							//Otherwise, prune if and only if the total disc count is less than 25
-							if(totalstones < 25)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}
+			if(totalstones >= 35) 
+				return false;
+			
+			if(row == 2){
+				if(col == 2){
+					//Otherwise, if the adjacent corner is occupied, do not prune
+					if(board.getOccupation(11)== 0)
+						return true;
+					//Otherwise, if both adjacent C-Square are occupied, always prune
+					if(board.getOccupation(12) != 0 && board.getOccupation(21) != 0 )
+						return true;
+					//Otherwise, prune if and only if the total disc count is less than 25
+					if(totalstones < 25)
+						return true;
 				}else{
-					if(col == 2){
-						try {
-							//Otherwise, if the adjacent corner is occupied, do not prune
-							if(gb.getOccupation(new Coordinates(8,1)) == 0)
-								return true;
-							//Otherwise, if both adjacent C-Square are occupied, always prune
-							if(gb.getOccupation(new Coordinates(8,2)) != 0 && gb.getOccupation(new Coordinates(7,1)) != 0 )
-								return true;
-							//Otherwise, prune if and only if the total disc count is less than 25
-							if(totalstones < 25)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}else{
-						try {
-							//Otherwise, if the adjacent corner is occupied, do not prune
-							if(gb.getOccupation(new Coordinates(8,8)) == 0)
-								return true;
-							//Otherwise, if both adjacent C-Square are occupied, always prune
-							if(gb.getOccupation(new Coordinates(8,7)) != 0 && gb.getOccupation(new Coordinates(7,8)) != 0 )
-								return true;
-							//Otherwise, prune if and only if the total disc count is less than 25
-							if(totalstones < 25)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}
+					//Otherwise, if the adjacent corner is occupied, do not prune
+					if(board.getOccupation(18) == 0)
+						return true;
+					//Otherwise, if both adjacent C-Square are occupied, always prune
+					if(board.getOccupation(17) != 0 && board.getOccupation(28) != 0 )
+						return true;
+					//Otherwise, prune if and only if the total disc count is less than 25
+					if(totalstones < 25)
+						return true;
 				}
+			}else{
+				if(col == 2){
+					//Otherwise, if the adjacent corner is occupied, do not prune
+					if(board.getOccupation(81) == 0)
+						return true;
+					//Otherwise, if both adjacent C-Square are occupied, always prune
+					if(board.getOccupation(82) != 0 && board.getOccupation(71) != 0 )
+						return true;
+					//Otherwise, prune if and only if the total disc count is less than 25
+					if(totalstones < 25)
+						return true;
+				}else{
+					//Otherwise, if the adjacent corner is occupied, do not prune
+					if(board.getOccupation(88) == 0)
+						return true;
+					//Otherwise, if both adjacent C-Square are occupied, always prune
+					if(board.getOccupation(87) != 0 && board.getOccupation(78) != 0 )
+						return true;
+					//Otherwise, prune if and only if the total disc count is less than 25
+					if(totalstones < 25)
+						return true;
+				}
+			}
 		}
 		
 		//Check if C Square
 		if((row == 1 && (col == 2 || col == 7)) || (row == 2 && (col == 1 || col == 8)) || (row == 7 && (col == 1 || col == 8)) || (row == 8 && (col == 2 || col == 7))){
 				
-				if(row == 1){
-					if(col == 2){
-						//Coordinates (1,2)
-						try {
-							//the adjacent corner and A square are empty, prune
-							if(gb.getOccupation(new Coordinates(1,1))== 0 && gb.getOccupation(new Coordinates(1,2))== 0)
-								return true;
-							//There is no opponent on the nearest B-Square
-							if(gb.getOccupation(new Coordinates(1,4)) != opponent)
-								return true;
-							//The total number of discs is less than 28
-							if(totalstones < 28)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}if(col == 7){
-						//Coordinates (1,7)
-						try {
-							//the adjacent corner and A square are empty, prune
-							if(gb.getOccupation(new Coordinates(1,8))== 0 && gb.getOccupation(new Coordinates(1,6))== 0)
-								return true;
-							//There is no opponent on the nearest B-Square
-							if(gb.getOccupation(new Coordinates(1,5)) != opponent)
-								return true;
-							//The total number of discs is less than 28
-							if(totalstones < 28)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}
-				}if(row == 2){
-					if(col == 1){
-						//Coordinates (2,1)
-						try {
-							//the adjacent corner and A square are empty, prune
-							if(gb.getOccupation(new Coordinates(1,1))== 0 && gb.getOccupation(new Coordinates(3,1))== 0)
-								return true;
-							//There is no opponent on the nearest B-Square
-							if(gb.getOccupation(new Coordinates(4,1)) != opponent)
-								return true;
-							//The total number of discs is less than 28
-							if(totalstones < 28)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}if(col == 8){
-						//Coordinates (2,8)
-						try {
-							//the adjacent corner and A square are empty, prune
-							if(gb.getOccupation(new Coordinates(1,8))== 0 && gb.getOccupation(new Coordinates(3,8))== 0)
-								return true;
-							//There is no opponent on the nearest B-Square
-							if(gb.getOccupation(new Coordinates(4,8)) != opponent)
-								return true;
-							//The total number of discs is less than 28
-							if(totalstones < 28)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}
+			if(row == 1){
+				if(col == 2){
+					//the adjacent corner and A square are empty, prune
+					if(board.getOccupation(11)== 0 && board.getOccupation(12)== 0)
+						return true;
+					//There is no opponent on the nearest B-Square
+					if(board.getOccupation(14) != opponent)
+						return true;
+					//The total number of discs is less than 28
+					if(totalstones < 28)
+						return true;
+				}if(col == 7){
+					//the adjacent corner and A square are empty, prune
+					if(board.getOccupation(18)== 0 && board.getOccupation(16)== 0)
+						return true;
+					//There is no opponent on the nearest B-Square
+					if(board.getOccupation(15) != opponent)
+						return true;
+					//The total number of discs is less than 28
+					if(totalstones < 28)
+						return true;
 				}
-				if(row == 7){
-					if(col == 1){
-						//Coordinates (7,1)
-						try {
-							//the adjacent corner and A square are empty, prune
-							if(gb.getOccupation(new Coordinates(8,1))== 0 && gb.getOccupation(new Coordinates(6,1))== 0)
-								return true;
-							//There is no opponent on the nearest B-Square
-							if(gb.getOccupation(new Coordinates(5,1)) != opponent)
-								return true;
-							//The total number of discs is less than 28
-							if(totalstones < 28)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}if(col == 8){
-						//Coordinates (7,8)
-						try {
-							//the adjacent corner and A square are empty, prune
-							if(gb.getOccupation(new Coordinates(8,8))== 0 && gb.getOccupation(new Coordinates(6,8))== 0)
-								return true;
-							//There is no opponent on the nearest B-Square
-							if(gb.getOccupation(new Coordinates(5,8)) != opponent)
-								return true;
-							//The total number of discs is less than 28
-							if(totalstones < 28)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}
-				}if(row == 8){
-					if(col == 2){
-						//Coordinates (8,2)
-						try {
-							//the adjacent corner and A square are empty, prune
-							if(gb.getOccupation(new Coordinates(8,1))== 0 && gb.getOccupation(new Coordinates(8,3))== 0)
-								return true;
-							//There is no opponent on the nearest B-Square
-							if(gb.getOccupation(new Coordinates(8,4)) != opponent)
-								return true;
-							//The total number of discs is less than 28
-							if(totalstones < 28)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}if(col == 7){
-						//Coordinates (8,7)
-						try {
-							//the adjacent corner and A square are empty, prune
-							if(gb.getOccupation(new Coordinates(8,8))== 0 && gb.getOccupation(new Coordinates(8,6))== 0)
-								return true;
-							//There is no opponent on the nearest B-Square
-							if(gb.getOccupation(new Coordinates(8,5)) != opponent)
-								return true;
-							//The total number of discs is less than 28
-							if(totalstones < 28)
-								return true;
-						} catch (OutOfBoundsException e) {
-							e.printStackTrace();
-						}
-					}
+			}if(row == 2){
+				if(col == 1){
+					//the adjacent corner and A square are empty, prune
+					if(board.getOccupation(11)== 0 && board.getOccupation(31)== 0)
+						return true;
+					//There is no opponent on the nearest B-Square
+					if(board.getOccupation(41) != opponent)
+						return true;
+					//The total number of discs is less than 28
+					if(totalstones < 28)
+						return true;
+				}if(col == 8){
+					//the adjacent corner and A square are empty, prune
+					if(board.getOccupation(18)== 0 && board.getOccupation(38)== 0)
+						return true;
+					//There is no opponent on the nearest B-Square
+					if(board.getOccupation(48) != opponent)
+						return true;
+					//The total number of discs is less than 28
+					if(totalstones < 28)
+						return true;
 				}
+			}
+			if(row == 7){
+				if(col == 1){
+					//the adjacent corner and A square are empty, prune
+					if(board.getOccupation(81)== 0 && board.getOccupation(61)== 0)
+						return true;
+					//There is no opponent on the nearest B-Square
+					if(board.getOccupation(51) != opponent)
+						return true;
+					//The total number of discs is less than 28
+					if(totalstones < 28)
+						return true;
+				}if(col == 8){
+					//the adjacent corner and A square are empty, prune
+					if(board.getOccupation(88)== 0 && board.getOccupation(68)== 0)
+						return true;
+					//There is no opponent on the nearest B-Square
+					if(board.getOccupation(58) != opponent)
+						return true;
+					//The total number of discs is less than 28
+					if(totalstones < 28)
+						return true;
+				}
+			}if(row == 8){
+				if(col == 2){
+					//the adjacent corner and A square are empty, prune
+					if(board.getOccupation(81)== 0 && board.getOccupation(83)== 0)
+						return true;
+					//There is no opponent on the nearest B-Square
+					if(board.getOccupation(84) != opponent)
+						return true;
+					//The total number of discs is less than 28
+					if(totalstones < 28)
+						return true;
+				}if(col == 7){
+					//the adjacent corner and A square are empty, prune
+					if(board.getOccupation(88)== 0 && board.getOccupation(86)== 0)
+						return true;
+					//There is no opponent on the nearest B-Square
+					if(board.getOccupation(85) != opponent)
+						return true;
+					//The total number of discs is less than 28
+					if(totalstones < 28)
+						return true;
+				}
+			}
 		}
 		
 		return false;
@@ -354,28 +299,29 @@ public class Eval {
 	 * Checks if a corner move is possible
 	 * @return the corner, or null if no corner move is possible
 	 */
-	protected static Coordinates checkCorners(GameBoard gb) {
+	/*
+	protected Coordinates checkCorners(BitBoard board) {
 		Coordinates result = null;
 		int max = 0, newmax = 0;
 		
-		if(gb.checkMove(HAL.player, new Coordinates(1, 1)))
+		if(board.checkMove(HAL.player, new Coordinates(1, 1)))
 			result = new Coordinates(1, 1);
 		
-		if(gb.checkMove(HAL.player, new Coordinates(1, 8)))
+		if(board.checkMove(HAL.player, new Coordinates(1, 8)))
 			if(result != null){
-				GameBoard test = gb.clone();
-				test.checkMove(HAL.player, result);
-				test.makeMove(HAL.player, result);
+				//GameBoard test = board.clone();
+				board.checkMove(HAL.player, result);
+				board.makeMove(HAL.player, result);
 				try{
-					max = HAL.max(gb.clone(), System.currentTimeMillis(), -64, 64, 0, null);
+					max = HAL.max(board.clone(), System.currentTimeMillis(), -64, 64, 0, null);
 				}catch(RuntimeException e){
 					
 				}
-				test = gb.clone();
-				test.checkMove(HAL.player, new Coordinates(1, 8));
-				test.makeMove(HAL.player, new Coordinates(1, 8));
+				board.undo_move();
+				board.checkMove(HAL.player, new Coordinates(1, 8));
+				board.makeMove(HAL.player, new Coordinates(1, 8));
 				try{
-					newmax = HAL.max(gb.clone(), System.currentTimeMillis(), -64, 64, 0, null);
+					newmax = HAL.max(board.clone(), System.currentTimeMillis(), -64, 64, 0, null);
 				}catch(RuntimeException e){
 					
 				}
@@ -383,42 +329,40 @@ public class Eval {
 			}
 			else result = new Coordinates(1, 8);
 			
-		if(gb.checkMove(HAL.player, new Coordinates(8, 1)))
+		if(board.checkMove(HAL.player, new Coordinates(8, 1)))
 			if(result != null){
-				GameBoard test = gb.clone();
-				test.checkMove(HAL.player, result);
-				test.makeMove(HAL.player, result);
+				board.checkMove(HAL.player, result);
+				board.makeMove(HAL.player, result);
 				try{
-					max = HAL.max(gb.clone(), System.currentTimeMillis(), -64, 64, 0, null);
+					max = HAL.max(board.clone(), System.currentTimeMillis(), -64, 64, 0, null);
 				}catch(RuntimeException e){
 					
 				}
-				test = gb.clone();
-				test.checkMove(HAL.player, new Coordinates(8, 1));
-				test.makeMove(HAL.player, new Coordinates(8, 1));
+				board.undo_move();
+				board.checkMove(HAL.player, new Coordinates(8, 1));
+				board.makeMove(HAL.player, new Coordinates(8, 1));
 				try{
-					newmax = HAL.max(gb.clone(), System.currentTimeMillis(), -64, 64, 0, null);
+					newmax = HAL.max(board.clone(), System.currentTimeMillis(), -64, 64, 0, null);
 				}catch(RuntimeException e){
 					
 				}
 				if(newmax%1000 >= max%1000) result = new Coordinates(1, 8);
 			}
 			else result = new Coordinates(8, 1);
-		if(gb.checkMove(HAL.player, new Coordinates(8, 8)))
+		if(board.checkMove(HAL.player, new Coordinates(8, 8)))
 			if(result != null){
-				GameBoard test = gb.clone();
-				test.checkMove(HAL.player, result);
-				test.makeMove(HAL.player, result);
+				board.checkMove(HAL.player, result);
+				board.makeMove(HAL.player, result);
 				try{
-					max = HAL.max(gb.clone(), System.currentTimeMillis(), -64, 64, 0, null);
+					max = HAL.max(board.clone(), System.currentTimeMillis(), -64, 64, 0, null);
 				}catch(RuntimeException e){
 					
 				}
-				test = gb.clone();
-				test.checkMove(HAL.player, new Coordinates(8, 8));
-				test.makeMove(HAL.player, new Coordinates(8, 8));
+				board.undo_move();
+				board.checkMove(HAL.player, new Coordinates(8, 8));
+				board.makeMove(HAL.player, new Coordinates(8, 8));
 				try{
-					newmax = HAL.max(gb.clone(), System.currentTimeMillis(), -64, 64, 0, null);
+					newmax = HAL.max(board.clone(), System.currentTimeMillis(), -64, 64, 0, null);
 				}catch(RuntimeException e){
 					
 				}
@@ -427,5 +371,6 @@ public class Eval {
 			else result = new Coordinates(8, 8);
 		return result;	
 	}
+	*/
 	
 }

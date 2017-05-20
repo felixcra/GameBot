@@ -1,4 +1,4 @@
-package HALtests;
+package HAL;
 
 
 import reversi.Arena;
@@ -7,15 +7,7 @@ import reversi.GameBoard;
 import reversi.ReversiPlayer;
 
 public class HAL implements ReversiPlayer {
-	//implements alpha beta and depth calculation by time
-	
-	//greater weighting of the total amount of tiles
 
-		/**
-		 * Die Farbe des Spielers.
-		 */
-		//protected static int player = 0;
-		//protected static int opponent = 0;
 		private long timeout;
 		protected int maxdepth;
 		protected int traveldepth;
@@ -26,6 +18,7 @@ public class HAL implements ReversiPlayer {
 		protected static int opponent;
 		private BitBoard board;
 		private Eval eval;
+		
 		/**
 		 * Konstruktor, der bei der Gründung eines Bots eine Meldung auf den
 		 * Bildschirm ausgibt.
@@ -49,11 +42,13 @@ public class HAL implements ReversiPlayer {
 		      opponent = reversi.GameBoard.RED;
 
 		    // Timeout
-		    this.timeout = timeout;
-		    if (timeout > 5000)
-		      this.timeout = Long.MAX_VALUE;
+		    //this.timeout = timeout;
+		    //if (timeout > 5000)
+		      this.timeout = 5000;
+		    
 		    // traveldepth
 		    traveldepth = 7;
+		    
 		    // Player
 		    if (player == reversi.GameBoard.RED) {
 		      System.out.println("HAL ist Spieler RED.");
@@ -69,31 +64,7 @@ public class HAL implements ReversiPlayer {
 		    // Initialize GameBoard
 		    board = new BitBoard(this.player, player, opponent);
 		  }
-		
-		/**
-		 * 
-		 * @param BitBoard gb
-		 * @return a list of all possible moves
-		 */
-		/*
-		private static ArrayList<Coordinates> possibleMoves(GameBoard gb, int moveplayer){
-			ArrayList<Coordinates> possible = new ArrayList<Coordinates>();
-			for(int i=1; i<9; i++){ //loop for Column and for row
-				Coordinates result;
-				for(int j=1; j<9; j++){
-					result = new Coordinates(i, j);
-					if(gb.checkMove(moveplayer, result)){
-						possible.add(result); //return the result, no need to keep checking
-					}
-				}
-			}
-			return possible;
-		}
-		*/
 			
-		
-		
-		
 		/**
 		 * 
 		 * @param the Gameboard
@@ -111,11 +82,11 @@ public class HAL implements ReversiPlayer {
 			}
 
 			if(depth == traveldepth){
-				return eval.getWeight(board, lastCoordinate, depth, lastmovescount); //go back up from here
+				return eval.getWeight(board, lastCoordinate, depth, lastmovescount);
 			}
 			
 			board.generate_all(opponent);
-			int[] possible = board.getAllMoves(); //possibleMoves(gb, opponent);
+			int[] possible = board.getAllMoves();
 			
 			if(possible.length == 0){
 				return passvalue;
@@ -125,11 +96,10 @@ public class HAL implements ReversiPlayer {
 			int min = beta, at = 0, tmp = 0;
 			
 			for(int i = 0; i < possible.length; i++){
+				
 				//should we prune
 				if(eval.checkPrune(board, possible[i], (board.countStones(player)+board.countStones(opponent)), opponent)){
-					//System.out.println("Pruning!");
 					if(++i >= possible.length){
-						//System.out.println("Pruning and breaking!");
 						break;
 					}
 				}
@@ -178,7 +148,7 @@ public class HAL implements ReversiPlayer {
 			}
 			
 			if(depth == traveldepth){
-				return eval.getWeight(board, lastCoordinate, depth, lastmovescount); //go back up from here
+				return eval.getWeight(board, lastCoordinate, depth, lastmovescount);
 			}
 
 			int[] possible = board.getAllMoves();
@@ -194,9 +164,7 @@ public class HAL implements ReversiPlayer {
 
 				//should We prune
 				if(eval.checkPrune(board, possible[i], (board.countStones(player)+board.countStones(opponent)), player)){
-					//System.out.println("Pruning!");
 					if(++i >= possible[i]){
-						//System.out.println("Pruning and breaking!");
 						break;
 					}
 				}
@@ -207,7 +175,7 @@ public class HAL implements ReversiPlayer {
 				tmp = tmp%1000;
 				if(tmp > max){ // see if the move is good
 					max = tmp; //save the move if it is
-					at = i; // eventuel nur bei depth == 0
+					at = i;
 					if (max >= beta){
 						break;
 					}
@@ -226,64 +194,6 @@ public class HAL implements ReversiPlayer {
 			
 			return max;
 		}
-		
-
-		/**
-		 * 
-		 * @param gb
-		 * @param alpha
-		 * @param beta
-		 * @param depth
-		 * @param player
-		 * @return
-		 * @throws RuntimeException
-		 */
-		/*
-		protected int endgamesearch(GameBoard gb, long start, int alpha, int beta, int depth, int player)  throws RuntimeException{
-			long timediff = System.currentTimeMillis()-start;
-			if(timediff > timeout-500){
-				throw new RuntimeException("time ran out");
-			}
-			int opponent;
-			if(player == gb.GREEN) 
-				opponent = gb.RED;
-			else 
-				opponent = gb.GREEN;
-			
-			
-			if((gb.countStones(player)+gb.countStones(opponent)) == 64 || depth == traveldepth){
-				if(gb.countStones(opponent) == gb.countStones(player))
-					return 0; //draw
-				if(gb.countStones(opponent) > gb.countStones(player))//go back up from here
-					return 1; //win
-				else
-					return -1; //lose
-			}
-			
-			GameBoard test = gb.clone();
-			ArrayList<Coordinates> possible = possibleMoves(test, player);
-			
-			boolean firstchild = true;
-			int score = alpha; // maybe not alpha;
-			
-			for(int i = 0; i< possible.size(); i++){
-				test.makeMove(player, possible.get(i));
-				if(firstchild){
-					firstchild = false;
-					score = -(endgamesearch(test, start, -beta, -alpha, depth+1, opponent));
-				}else{
-					score = -(endgamesearch(test, start, -alpha-1, -beta-1, depth+1, opponent));
-					if(alpha < score && score < beta)
-						score = -(endgamesearch(test, start, -beta, -beta-1, -score, opponent));
-				}
-				if(score > alpha)
-					alpha = score;
-				if(alpha >= beta)
-					break;
-			}
-			return alpha;
-	}
-*/
 
 		/**
 		 * 
@@ -292,41 +202,23 @@ public class HAL implements ReversiPlayer {
 		private Coordinates bestMove(){
 			long start = System.currentTimeMillis();
 			board.generate_all(player);
-			int[] possible = board.getAllMoves(); //possibleMoves(gb, opponent);
+			int[] possible = board.getAllMoves();
 			
 			if(possible.length == 0){
 				return null;
 			}
-			//check corner
-			/*Coordinates corner = eval.checkCorners(board);
-			
-			if(corner != null){
-				return corner;
-			}
-			*/
 
 			int at = 0;
-			/*
-			if((gb.countStones(player)+gb.countStones(opponent) + traveldepth) >= 64){
-				try{	
-					at = endgamesearch(gb.clone(), start, -1, 1, 0, this.player);
-				}catch(RuntimeException e){
-					traveldepth--;
-				}
-				at = Math.abs(at);
-				at = (at - at%1000)/1000;
-				return possible.get(at);
-			}
-			*/
-
-			
 			try{	
 				at = max(start, -64, 64, 0, 0, possible.length);
 			}catch(RuntimeException e){
 				traveldepth--;
 			}
 			
-			long timediff = System.currentTimeMillis() - start;
+			/*
+			 * go as deep as possible
+			 */
+ 			long timediff = System.currentTimeMillis() - start;
 			int traveldepthtmp = traveldepth;
 			int prevat = at;
 			
@@ -343,22 +235,21 @@ public class HAL implements ReversiPlayer {
 				prevat = at;
 				timediff = System.currentTimeMillis() - start;
 			}
+			
+			
 			System.out.println("timediff: " + timediff + " traveldepth: " + traveldepth);
 			traveldepth = traveldepthtmp;
 			at = Math.abs(at);
 			at = (at - at%1000)/1000;
 			return board.ArraytoCoordinate(possible[at]);
 		}
-		
-		
 
 		/**
-		 * Macht einen Zug für den HumanPlayer, indem der Benutzer zur Eingabe eines
-		 * Zuges aufgefordert wird. Diese Methode wird von {@link reversi.Arena}
+		 * Diese Methode wird von {@link reversi.Arena}
 		 * abwechselnd aufgerufen.
 		 * 
 		 * @see reversi.ReversiPlayer
-		 * @return Der Zug des HumanPlayers.
+		 * @return Der Zug des Spielers.
 		 */
 		public Coordinates nextMove(GameBoard gb)
 		{
@@ -371,18 +262,7 @@ public class HAL implements ReversiPlayer {
 			{
 				System.out.print("(GREEN) ");
 			}
-			board.update_opp_move(gb);
 			return bestMove();
 		} 
-
-		/**
-		 * Used for the System output
-		 */
-		private static String tab(int node){
-			String tmp = "";
-			for(int i= 0; i < node; i++)
-				tmp +="\t"+"*";
-			return tmp;
-		}
 }
 
